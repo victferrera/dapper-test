@@ -12,7 +12,7 @@ namespace DapperSimpleTest.Models
         public string Title { get; set; }
         public string Description { get; set; }
         public DateTime CreateAt { get; set; }
-        public DateTime EndAt { get; set; }
+        public DateTime? EndAt { get; set; }
         public User User { get; set; }
     }
 }
