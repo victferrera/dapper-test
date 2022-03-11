@@ -27,6 +27,7 @@ namespace DapperSimpleTest
             System.Console.WriteLine("4 - Lista de Tarefas cadastradas");
             System.Console.WriteLine("5 - Finalizar tarefa");
             System.Console.WriteLine("6 - Excluir tarefa");
+            System.Console.WriteLine("7 - Excluir usuário");
             System.Console.WriteLine("0 - Sair");
 
 
@@ -144,6 +145,22 @@ namespace DapperSimpleTest
                     var opt = int.Parse(System.Console.ReadLine());
 
                     RemoveTask(GetTaskById(opt));
+                }
+
+                if (option == 7)
+                {
+                    System.Console.Clear();
+
+                    var UsersList = GetUserList();
+
+                    foreach (var usr in UsersList)
+                    {
+                        System.Console.WriteLine($"Id : {usr.Id}, Nome: {usr.Nome}, Email: {usr.Email}");
+                    }
+
+                    var idToRemove = int.Parse(System.Console.ReadLine());
+
+                    RemoveUser(idToRemove);
                 }
 
                 AppInit();
@@ -272,6 +289,25 @@ namespace DapperSimpleTest
                 _connection.Execute(query, new { p1 = task.Id });
                 System.Console.Clear();
                 System.Console.WriteLine("Tarefa removida...");
+                Thread.Sleep(3000);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        static void RemoveUser(int userId)
+        {
+            using var _connection = Connection.GetConnection();
+
+            var query = "DELETE FROM [User] WHERE Id = @p1";
+
+            try
+            {
+                _connection.Execute(query, new { p1 = userId });
+                System.Console.Clear();
+                System.Console.WriteLine("Usuário removido...");
                 Thread.Sleep(3000);
             }
             catch (Exception e)
