@@ -22,10 +22,11 @@ namespace DapperSimpleTest
             System.Console.WriteLine("Menu de opções");
             System.Console.WriteLine("======================================");
             System.Console.WriteLine("1 - Cadastro de usuário");
-            System.Console.WriteLine("2 - Cadastro de Tarefa");
+            System.Console.WriteLine("2 - Cadastro de tarefa");
             System.Console.WriteLine("3 - Lista de usuários cadastrado");
             System.Console.WriteLine("4 - Lista de Tarefas cadastradas");
             System.Console.WriteLine("5 - Finalizar tarefa");
+            System.Console.WriteLine("6 - Excluir tarefa");
             System.Console.WriteLine("0 - Sair");
 
 
@@ -106,6 +107,7 @@ namespace DapperSimpleTest
 
                     Thread.Sleep(60000);
                 }
+
                 if (option == 5)
                 {
                     System.Console.Clear();
@@ -123,6 +125,25 @@ namespace DapperSimpleTest
                     var task = GetTaskById(int.Parse(opt));
 
                     CloseTask(task);
+                }
+
+                if (option == 6)
+                {
+                    System.Console.Clear();
+
+                    var TasksList = GetTaskList();
+
+                    System.Console.WriteLine("Informe o ID da tarefa que deseja remover");
+                    System.Console.WriteLine();
+
+                    foreach (var tsk in TasksList)
+                    {
+                        System.Console.WriteLine($"Id: {tsk.Id}, Title: {tsk.Title}, Description: {tsk.Description}, Create At: {tsk.CreateAt}, End At: {tsk.EndAt}");
+                    }
+
+                    var opt = int.Parse(System.Console.ReadLine());
+
+                    RemoveTask(GetTaskById(opt));
                 }
 
                 AppInit();
@@ -232,6 +253,25 @@ namespace DapperSimpleTest
                 _connection.Execute(query, new { p1 = DateTime.Now, p2 = task.Id });
                 System.Console.Clear();
                 System.Console.WriteLine("Task alterada...");
+                Thread.Sleep(3000);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        static void RemoveTask(Task task)
+        {
+            using var _connection = Connection.GetConnection();
+
+            var query = "DELETE FROM [Task] WHERE Id = @p1";
+
+            try
+            {
+                _connection.Execute(query, new { p1 = task.Id });
+                System.Console.Clear();
+                System.Console.WriteLine("Tarefa removida...");
                 Thread.Sleep(3000);
             }
             catch (Exception e)
