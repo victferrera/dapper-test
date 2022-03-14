@@ -1,11 +1,11 @@
-﻿using System.Data.SqlClient;
-using DapperSimpleTest.Models;
+﻿using DapperSimpleTest.Models;
 using Dapper;
 using DapperSimpleTest.Data;
 using System;
 using System.Threading;
 using System.Linq;
 using System.Collections.Generic;
+using Dapper.Contrib.Extensions;
 
 namespace DapperSimpleTest
 {
@@ -25,6 +25,7 @@ namespace DapperSimpleTest
             System.Console.WriteLine("2 - Cadastro de tarefa");
             System.Console.WriteLine("3 - Lista de usuários cadastrado");
             System.Console.WriteLine("4 - Lista de Tarefas cadastradas");
+            System.Console.WriteLine("41 - Lista de Tarefas com usuário vinculado");
             System.Console.WriteLine("5 - Finalizar tarefa");
             System.Console.WriteLine("6 - Excluir tarefa");
             System.Console.WriteLine("7 - Excluir usuário");
@@ -90,7 +91,6 @@ namespace DapperSimpleTest
                         System.Console.WriteLine($"Id : {usr.Id}, Nome: {usr.Nome}, Email: {usr.Email}");
                     }
 
-
                     Thread.Sleep(60000);
                 }
 
@@ -114,9 +114,10 @@ namespace DapperSimpleTest
                     System.Console.Clear();
                     var TasksList = GetTaskList();
 
+                    System.Console.WriteLine("Digite o ID da tarefa a finalizar");
+
                     foreach (var tsk in TasksList)
                     {
-                        System.Console.WriteLine("Digite o ID da tarefa a finalizar");
                         System.Console.WriteLine();
                         System.Console.WriteLine($"Id: {tsk.Id}, Title: {tsk.Title}, Description: {tsk.Description}, Create At: {tsk.CreateAt}, End At: {tsk.EndAt}");
                     }
@@ -161,6 +162,20 @@ namespace DapperSimpleTest
                     var idToRemove = int.Parse(System.Console.ReadLine());
 
                     RemoveUser(idToRemove);
+                }
+
+                if (option == 41)
+                {
+                    System.Console.Clear();
+
+                    var taskList = GetTaskWithUser();
+
+                    foreach (var tsk in taskList)
+                    {
+                        System.Console.WriteLine($"Task Id: {tsk.Id}, Task Title: {tsk.Title}, User Name: {tsk.User.Nome},  User Id: {tsk.User.Id}");
+                    }
+
+                    System.Console.ReadLine();
                 }
 
                 AppInit();
@@ -301,19 +316,79 @@ namespace DapperSimpleTest
         {
             using var _connection = Connection.GetConnection();
 
+            System.Console.Clear();
+            System.Console.WriteLine("Excluíndo este usuário, as tarefas a seguir serão excluídas também: ");
+
+            var userTaskList = GetTaskByUserId(userId);
+
+            foreach (var tsk in userTaskList)
+            {
+                System.Console.WriteLine(
+                $@"
+                Task Id: {tsk.Id}
+                Task Title: {tsk.Title}"
+                );
+            }
+
+            System.Console.WriteLine();
+            System.Console.WriteLine("Deseja continuar? s/n ");
+
+            var option = System.Console.ReadLine();
+
+            if (option == "n")
+                return;
+
             var query = "DELETE FROM [User] WHERE Id = @p1";
+
+            try
+            {
+                _connection.Delete(userTaskList);
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
 
             try
             {
                 _connection.Execute(query, new { p1 = userId });
                 System.Console.Clear();
-                System.Console.WriteLine("Usuário removido...");
-                Thread.Sleep(3000);
+                System.Console.WriteLine("Usuário removido e tarefas removidos...");
+                System.Console.ReadLine();
             }
             catch (Exception e)
             {
                 throw new Exception(e.Message);
             }
+        }
+
+        static List<Task> GetTaskWithUser()
+        {
+            using var _connection = Connection.GetConnection();
+
+            var query = @"SELECT * FROM 
+            [Task] t 
+            INNER JOIN [User] u
+            on t.UserId = u.Id";
+
+            var tasks = _connection.Query<Task, User, Task>(query, (task, user) =>
+            {
+                task.User = user;
+                return task;
+            }, splitOn: "UserId");
+
+            return tasks.ToList();
+        }
+
+        static IEnumerable<Task> GetTaskByUserId(int id)
+        {
+            using var _connection = Connection.GetConnection();
+
+            var query = @"SELECT * FROM [Task] t WHERE t.UserId = @p1";
+
+            var taskList = _connection.Query<Task>(query, new { p1 = id });
+
+            return taskList;
         }
     }
 }
