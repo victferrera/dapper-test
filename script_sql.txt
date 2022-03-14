@@ -1,0 +1,26 @@
+create database DapperTest
+
+create table Task (
+    [Id] int not null identity,
+    [Title] varchar(60) not null,
+    [Description] varchar(100),
+    [CreateAt] datetime not null,
+    [EndAt] datetime,
+    [UserId] int not null
+)
+
+alter table [Task]
+add constraint PK_Task primary key([Id])
+
+alter table [Task]
+add constraint FK_Task_User
+foreign key ([UserId]) references [User]([Id])
+
+create table [User] (
+    [Id] int not null identity,
+    [Nome] varchar(60) not null,
+    [Email] varchar(60) not null
+)
+
+alter table [User]
+add constraint PK_User primary key([Id])
